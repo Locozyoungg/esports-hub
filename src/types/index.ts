@@ -1,3 +1,23 @@
+export interface Organization {
+  id: string
+  name: string
+  slug: string
+  logo?: string
+  primaryColor?: string
+  mpesaPaybill?: string
+  mpesaAccountPrefix?: string
+  createdAt: Date
+}
+
+export interface MpesaPayment {
+  eventId: string
+  organizationId: string
+  buyerEmail: string
+  buyerName?: string
+  amount: number
+  accountRef: string
+}
+
 export interface User {
   id: string
   email: string

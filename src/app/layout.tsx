@@ -1,8 +1,8 @@
-import './styles/globals.css'
+import './globals.css'
 import { Inter } from 'next/font/google'
 import Header from '@/components/layout/Header'
 import Footer from '@/components/layout/Footer'
-import { AuthProvider } from '@/lib/auth'
+import { AuthProvider } from '@/lib/auth-provider'
 
 const inter = Inter({ subsets: ['latin'] })
 

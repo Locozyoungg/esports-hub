@@ -7,21 +7,32 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+// ── Users ──────────────────────────────────────────────────────────
+
 model User {
-  id            String    @id @default(cuid())
-  email         String    @unique
-  name          String?
-  password      String    // hashed
-  role          UserRole  @default(USER)
-  createdAt     DateTime  @default(now())
-  tickets       Ticket[]
-  posts         Post[]
-  comments      Comment[]
+  id        String    @id @default(cuid())
+  email     String    @unique
+  name      String?
+  password  String    // hashed; empty string for guest checkout users
+  role      UserRole  @default(USER)
+  createdAt DateTime  @default(now())
+
+  tickets                 Ticket[]
+  posts                   Post[]
+  comments                Comment[]
   tournamentRegistrations TournamentRegistration[]
+  organizations           OrganizationUser[]
 }
 
+enum UserRole {
+  USER
+  ADMIN
+}
+
+// ── Tournaments (competitive events with brackets / prizes) ───────
+
 model Tournament {
-  id          String   @id @default(cuid())
+  id          String           @id @default(cuid())
   title       String
   game        String
   description String
@@ -31,53 +42,10 @@ model Tournament {
   ticketPrice Float
   imageUrl    String?
   status      TournamentStatus @default(UPCOMING)
-  tickets     Ticket[]
+
+  eventId      String?
+  event        Event?           @relation(fields: [eventId], references: [id])
   registrations TournamentRegistration[]
-}
-
-model Ticket {
-  id          String   @id @default(cuid())
-  userId      String
-  tournamentId String
-  purchaseDate DateTime @default(now())
-  stripePaymentIntentId String? // for verification
-  user        User     @relation(fields: [userId], references: [id])
-  tournament  Tournament @relation(fields: [tournamentId], references: [id])
-}
-
-model TournamentRegistration {
-  id          String   @id @default(cuid())
-  userId      String
-  tournamentId String
-  registeredAt DateTime @default(now())
-  user        User     @relation(fields: [userId], references: [id])
-  tournament  Tournament @relation(fields: [tournamentId], references: [id])
-}
-
-model Post {
-  id        String   @id @default(cuid())
-  title     String
-  content   String
-  authorId  String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  author    User     @relation(fields: [authorId], references: [id])
-  comments  Comment[]
-}
-
-model Comment {
-  id        String   @id @default(cuid())
-  content   String
-  authorId  String
-  postId    String
-  createdAt DateTime @default(now())
-  author    User     @relation(fields: [authorId], references: [id])
-  post      Post     @relation(fields: [postId], references: [id])
-}
-
-enum UserRole {
-  USER
-  ADMIN
 }
 
 enum TournamentStatus {
@@ -86,25 +54,43 @@ enum TournamentStatus {
   COMPLETED
 }
 
+model TournamentRegistration {
+  id           String   @id @default(cuid())
+  userId       String
+  tournamentId String
+  registeredAt DateTime @default(now())
+
+  user       User       @relation(fields: [userId], references: [id])
+  tournament Tournament @relation(fields: [tournamentId], references: [id])
+
+  @@unique([userId, tournamentId])
+}
+
+// ── Organizations (white-label event hosts) ────────────────────────
+
 model Organization {
-  id          String   @id @default(cuid())
-  name        String
-  slug        String   @unique  // for white-label subdomain or path
-  logo        String?
-  primaryColor String?  // hex code for branding
-  createdAt   DateTime @default(now())
-  users       OrganizationUser[]
-  events      Event[]   // events created by this org
-  tickets     Ticket[]  // all tickets sold via this org
+  id           String   @id @default(cuid())
+  name         String
+  slug         String   @unique
+  logo         String?
+  primaryColor String?
+  mpesaPaybill String?  // M-Pesa PayBill number (e.g. "247247")
+  mpesaAccountPrefix String? // Prefix for account ref (e.g. "ESH-")
+  createdAt    DateTime @default(now())
+
+  users   OrganizationUser[]
+  events  Event[]
+  tickets Ticket[]
 }
 
 model OrganizationUser {
-  id             String   @id @default(cuid())
+  id             String          @id @default(cuid())
   userId         String
   organizationId String
-  role           OrgRole  @default(MEMBER) // ADMIN, MEMBER
-  user           User     @relation(fields: [userId], references: [id])
-  organization   Organization @relation(fields: [organizationId], references: [id])
+  role           OrgRole         @default(MEMBER)
+
+  user         User         @relation(fields: [userId], references: [id])
+  organization Organization @relation(fields: [organizationId], references: [id])
 
   @@unique([userId, organizationId])
 }
@@ -114,23 +100,25 @@ enum OrgRole {
   MEMBER
 }
 
-// Extend existing Event model (rename Tournament → Event for generalization)
+// ── Events (ticketed experiences under an organization) ────────────
+
 model Event {
-  id             String   @id @default(cuid())
+  id             String      @id @default(cuid())
   title          String
   description    String
   startDate      DateTime
   endDate        DateTime
   ticketPrice    Float
-  totalTickets   Int?     // optional capacity
-  soldTickets    Int      @default(0)
+  totalTickets   Int?
+  soldTickets    Int         @default(0)
   imageUrl       String?
   status         EventStatus @default(DRAFT)
-  organizationId String   // new: which org owns this event
-  organization   Organization @relation(fields: [organizationId], references: [id])
-  tickets        Ticket[]
-  registrations  TournamentRegistration[] // if also has brackets
-  createdAt      DateTime @default(now())
+  organizationId String
+  createdAt      DateTime    @default(now())
+
+  organization Organization @relation(fields: [organizationId], references: [id])
+  tickets      Ticket[]
+  tournaments  Tournament[]
 }
 
 enum EventStatus {
@@ -140,16 +128,42 @@ enum EventStatus {
   CANCELLED
 }
 
-// Update existing Ticket model to reference Event (instead of Tournament)
-// Keep backward compatibility by renaming tournamentId → eventId
+// ── Tickets (purchased via Stripe) ─────────────────────────────────
+
 model Ticket {
-  id          String   @id @default(cuid())
-  userId      String
-  eventId     String   // changed from tournamentId
-  organizationId String // denormalized for quick filtering
-  purchaseDate DateTime @default(now())
-  stripePaymentIntentId String?
-  user        User     @relation(fields: [userId], references: [id])
-  event       Event    @relation(fields: [eventId], references: [id])
+  id                     String   @id @default(cuid())
+  userId                 String
+  eventId                String
+  organizationId         String
+  purchaseDate           DateTime @default(now())
+  stripePaymentIntentId  String?
+
+  user         User         @relation(fields: [userId], references: [id])
+  event        Event        @relation(fields: [eventId], references: [id])
   organization Organization @relation(fields: [organizationId], references: [id])
+}
+
+// ── Community ──────────────────────────────────────────────────────
+
+model Post {
+  id        String   @id @default(cuid())
+  title     String
+  content   String
+  authorId  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  author   User      @relation(fields: [authorId], references: [id])
+  comments Comment[]
+}
+
+model Comment {
+  id        String   @id @default(cuid())
+  content   String
+  authorId  String
+  postId    String
+  createdAt DateTime @default(now())
+
+  author User @relation(fields: [authorId], references: [id])
+  post   Post @relation(fields: [postId], references: [id])
 }

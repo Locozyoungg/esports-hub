@@ -5,15 +5,28 @@ export async function GET(
   req: Request,
   { params }: { params: { id: string } }
 ) {
-  const tournament = await prisma.tournament.findUnique({
-    where: { id: params.id },
-    include: {
-      tickets: true,
-      registrations: { include: { user: true } },
-    },
-  })
-  if (!tournament) {
-    return NextResponse.json({ error: 'Not found' }, { status: 404 })
+  try {
+    const tournament = await prisma.tournament.findUnique({
+      where: { id: params.id },
+      include: {
+        registrations: { include: { user: true } },
+        event: {
+          include: {
+            organization: {
+              select: { slug: true, mpesaPaybill: true, mpesaAccountPrefix: true },
+            },
+          },
+        },
+      },
+    })
+
+    if (!tournament) {
+      return NextResponse.json({ error: 'Tournament not found' }, { status: 404 })
+    }
+
+    return NextResponse.json(tournament)
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Unknown error'
+    return NextResponse.json({ error: message }, { status: 500 })
   }
-  return NextResponse.json(tournament)
 }
