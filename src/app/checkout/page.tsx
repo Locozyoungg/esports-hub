@@ -1,10 +1,10 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, Suspense } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 
-export default function CheckoutPage() {
+function CheckoutContent() {
   const searchParams = useSearchParams()
   const router = useRouter()
   const clientSecret = searchParams.get('clientSecret')
@@ -80,5 +80,20 @@ export default function CheckoutPage() {
         )}
       </div>
     </div>
+  )
+}
+
+// 💡 Default export wrapped in a Suspense boundary for Next.js build optimization
+export default function CheckoutPage() {
+  return (
+    <Suspense 
+      fallback={
+        <div className="max-w-lg mx-auto px-4 py-20 text-center text-gray-400">
+          Loading secure checkouts...
+        </div>
+      }
+    >
+      <CheckoutContent />
+    </Suspense>
   )
 }

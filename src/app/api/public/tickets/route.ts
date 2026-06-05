@@ -3,7 +3,10 @@ import Stripe from 'stripe'
 import { prisma } from '@/lib/prisma'
 import bcrypt from 'bcryptjs'
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!)
+// 💡 Pass the required configuration object as the second argument
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
+  apiVersion: '2025-01-01' as any,
+})
 
 export async function POST(req: Request) {
   try {
