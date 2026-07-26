@@ -39,11 +39,11 @@ async function main() {
     where: { slug: 'esports-hub' },
     update: {},
     create: {
-      name: 'Esports Hub',
+      name: 'Kylin Esports Hub',
       slug: 'esports-hub',
       primaryColor: '#8b5cf6',
-      mpesaPaybill: '247247',
-      mpesaAccountPrefix: 'ESH-',
+      mpesaPaybill: '542542',
+      mpesaAccountPrefix: '672912',
     },
   })
   console.log('✓ Organization:', org.name)
@@ -105,7 +105,7 @@ async function main() {
     update: {},
     create: {
       id: 'welcome-post',
-      title: 'Welcome to the Esports Hub!',
+      title: 'Welcome to the Kylin Esports Hub!',
       content:
         'Welcome to the community! Use this space to discuss strategies, find teammates, share highlights, and stay up to date on upcoming tournaments.\n\nFeel free to create your own posts and start conversations. See you in the arena!',
       authorId: admin.id,

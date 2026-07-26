@@ -56,7 +56,7 @@ export async function POST(req: Request) {
     }
 
     // Generate account reference: prefix + eventId suffix + userId suffix
-    const prefix = org.mpesaAccountPrefix || 'ESH-'
+    const prefix = org.mpesaAccountPrefix || '672912'
     const shortEventId = eventId.slice(-6).toUpperCase()
     const shortUserId = userId.slice(-4).toUpperCase()
     const accountRef = `${prefix}${shortEventId}-${shortUserId}`

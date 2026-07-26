@@ -1,33 +1,37 @@
 'use client'
 
-import { Canvas } from '@react-three/fiber'
-import { OrbitControls, Text, Box } from '@react-three/drei'
-import { useRef } from 'react'
+interface Match {
+  teamA?: string
+  teamB?: string
+}
 
 export default function Bracket3D({ matches }: { matches: any[] }) {
-  // Simple 3D visualization: each match is a box with text
+  if (!matches || matches.length === 0) {
+    return (
+      <div className="h-48 sm:h-64 flex items-center justify-center text-gray-500 text-sm sm:text-base">
+        🏆 Bracket coming soon — matches will appear here once scheduled.
+      </div>
+    )
+  }
+
   return (
-    <div className="h-96 w-full bg-black/30 rounded-lg">
-      <Canvas camera={{ position: [0, 5, 10] }}>
-        <ambientLight intensity={0.5} />
-        <pointLight position={[10, 10, 10]} />
-        <OrbitControls enableZoom enablePan />
-        {matches.map((match, idx) => (
-          <group key={idx} position={[idx * 3 - 3, 0, 0]}>
-            <Box args={[2, 0.5, 1]} position={[0, 0, 0]}>
-              <meshStandardMaterial color="#8b5cf6" />
-            </Box>
-            <Text
-              position={[0, 0.5, 0]}
-              fontSize={0.3}
-              color="white"
-              anchorX="center"
-            >
-              {match.teamA || 'TBD'} vs {match.teamB || 'TBD'}
-            </Text>
-          </group>
-        ))}
-      </Canvas>
+    <div className="space-y-3 p-2">
+      {matches.map((match: Match, idx: number) => (
+        <div
+          key={idx}
+          className="bg-white/5 border border-white/10 rounded-xl p-3 sm:p-4 flex items-center justify-between gap-3 sm:gap-4 hover:bg-white/10 transition-colors"
+        >
+          <span className="font-semibold text-purple-300 text-sm sm:text-lg flex-1 text-center truncate">
+            {match.teamA || 'TBD'}
+          </span>
+          <span className="text-gray-600 text-xs sm:text-sm font-bold px-2 sm:px-3 py-1 bg-white/5 rounded-full shrink-0">
+            VS
+          </span>
+          <span className="font-semibold text-pink-300 text-sm sm:text-lg flex-1 text-center truncate">
+            {match.teamB || 'TBD'}
+          </span>
+        </div>
+      ))}
     </div>
   )
 }

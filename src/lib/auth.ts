@@ -44,4 +44,18 @@ export const authOptions: NextAuthOptions = {
   session: { strategy: 'jwt' },
   secret: process.env.NEXTAUTH_SECRET,
   pages: { signIn: '/auth/signin' },
+  // When behind a proxy (Cloudflare Tunnel, nginx, etc.), the front-end
+  // is HTTPS but Next.js receives HTTP. Tell NextAuth to use secure cookies
+  // based on the X-Forwarded-Proto header rather than the local protocol.
+  cookies: {
+    sessionToken: {
+      name: process.env.NODE_ENV === 'production' ? '__Secure-next-auth.session-token' : 'next-auth.session-token',
+      options: {
+        httpOnly: true,
+        sameSite: 'lax',
+        path: '/',
+        secure: process.env.NODE_ENV === 'production' ? true : 'auto',
+      },
+    },
+  },
 }

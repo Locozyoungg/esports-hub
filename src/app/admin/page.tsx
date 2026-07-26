@@ -99,66 +99,66 @@ export default function AdminPage() {
   }, [loadPending])
 
   return (
-    <div className="max-w-5xl mx-auto px-4 py-12 space-y-10">
-      <h1 className="text-4xl font-bold">Admin Panel</h1>
+    <div className="max-w-5xl mx-auto px-4 py-8 sm:py-12 space-y-8 sm:space-y-10">
+      <h1 className="text-3xl sm:text-4xl font-bold">Admin Panel</h1>
 
       {/* ── Create Tournament ─────────────────────────────────────── */}
-      <div className="bg-white/5 rounded-xl p-6 space-y-4">
-        <h2 className="text-2xl font-semibold">Create Tournament</h2>
-        <div className="grid md:grid-cols-2 gap-4">
+      <div className="bg-white/5 rounded-xl p-4 sm:p-6 space-y-4">
+        <h2 className="text-xl sm:text-2xl font-semibold">Create Tournament</h2>
+        <div className="grid sm:grid-cols-2 gap-3 sm:gap-4">
           <input
             placeholder="Title"
-            className="w-full bg-black/50 border border-white/20 rounded px-4 py-2"
+            className="w-full bg-black/50 border border-white/20 rounded px-4 py-3 text-base"
             onChange={(e) => setNewTourney({ ...newTourney, title: e.target.value })}
           />
           <input
-            placeholder="Game"
-            className="w-full bg-black/50 border border-white/20 rounded px-4 py-2"
+            placeholder="Game (e.g. Valorant)"
+            className="w-full bg-black/50 border border-white/20 rounded px-4 py-3 text-base"
             onChange={(e) => setNewTourney({ ...newTourney, game: e.target.value })}
           />
           <textarea
             placeholder="Description"
-            className="w-full bg-black/50 border border-white/20 rounded px-4 py-2 md:col-span-2"
+            className="w-full bg-black/50 border border-white/20 rounded px-4 py-3 text-base sm:col-span-2"
+            rows={3}
             onChange={(e) => setNewTourney({ ...newTourney, description: e.target.value })}
           />
           <input
             type="datetime-local"
-            className="w-full bg-black/50 border border-white/20 rounded px-4 py-2"
+            className="w-full bg-black/50 border border-white/20 rounded px-4 py-3 text-base"
             onChange={(e) => setNewTourney({ ...newTourney, startDate: e.target.value })}
           />
-          <div className="flex gap-4">
+          <div className="flex gap-3 sm:gap-4">
             <input
               type="number"
               placeholder="Prize Pool ($)"
-              className="flex-1 bg-black/50 border border-white/20 rounded px-4 py-2"
+              className="flex-1 bg-black/50 border border-white/20 rounded px-4 py-3 text-base"
               onChange={(e) => setNewTourney({ ...newTourney, prizePool: parseFloat(e.target.value) })}
             />
             <input
               type="number"
               placeholder="Ticket Price ($)"
-              className="flex-1 bg-black/50 border border-white/20 rounded px-4 py-2"
+              className="flex-1 bg-black/50 border border-white/20 rounded px-4 py-3 text-base"
               onChange={(e) => setNewTourney({ ...newTourney, ticketPrice: parseFloat(e.target.value) })}
             />
           </div>
         </div>
-        <Button onClick={handleCreate}>Create Tournament</Button>
+        <Button onClick={handleCreate} className="w-full sm:w-auto">Create Tournament</Button>
       </div>
 
       {/* ── M-Pesa PayBill Settings ───────────────────────────────── */}
-      <div className="bg-white/5 rounded-xl p-6 space-y-4">
-        <h2 className="text-2xl font-semibold">M-Pesa PayBill Settings</h2>
+      <div className="bg-white/5 rounded-xl p-4 sm:p-6 space-y-4">
+        <h2 className="text-xl sm:text-2xl font-semibold">M-Pesa PayBill Settings</h2>
         <p className="text-sm text-gray-400">
           Configure M-Pesa PayBill details so users can pay via mobile money.
-          Leave a field empty to disable that payment method.
         </p>
 
-        <div className="grid md:grid-cols-2 gap-4">
+        <div className="grid sm:grid-cols-2 gap-3 sm:gap-4">
           <div>
             <label className="block text-sm text-gray-400 mb-1">Organization Slug</label>
             <input
               value={orgSlug}
               onChange={(e) => setOrgSlug(e.target.value)}
-              className="w-full bg-black/50 border border-white/20 rounded px-4 py-2"
+              className="w-full bg-black/50 border border-white/20 rounded px-4 py-3 text-base"
               placeholder="esports-hub"
             />
           </div>
@@ -167,23 +167,23 @@ export default function AdminPage() {
             <input
               value={mpesaPaybill}
               onChange={(e) => setMpesaPaybill(e.target.value)}
-              className="w-full bg-black/50 border border-white/20 rounded px-4 py-2"
+              className="w-full bg-black/50 border border-white/20 rounded px-4 py-3 text-base"
               placeholder="e.g. 247247"
             />
           </div>
-          <div>
+          <div className="sm:col-span-2">
             <label className="block text-sm text-gray-400 mb-1">Account Reference Prefix</label>
             <input
               value={mpesaAccountPrefix}
               onChange={(e) => setMpesaAccountPrefix(e.target.value)}
-              className="w-full bg-black/50 border border-white/20 rounded px-4 py-2"
-              placeholder="e.g. ESH-"
+              className="w-full bg-black/50 border border-white/20 rounded px-4 py-3 text-base"
+              placeholder="e.g. 672912"
             />
           </div>
         </div>
 
-        <div className="flex items-center gap-4">
-          <Button onClick={handleSaveMpesa} disabled={mpesaSaving}>
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4">
+          <Button onClick={handleSaveMpesa} disabled={mpesaSaving} className="w-full sm:w-auto">
             {mpesaSaving ? 'Saving...' : 'Save Settings'}
           </Button>
           {mpesaMessage && (
@@ -194,20 +194,20 @@ export default function AdminPage() {
         </div>
 
         {mpesaPaybill && (
-          <div className="bg-purple-900/30 border border-purple-500/30 rounded-lg p-4 mt-2">
-            <p className="text-sm font-semibold text-purple-300 mb-1">Preview — what users will see</p>
-            <p className="text-sm text-gray-300">
+          <div className="bg-purple-900/30 border border-purple-500/30 rounded-lg p-3 sm:p-4">
+            <p className="text-xs sm:text-sm font-semibold text-purple-300 mb-1">Preview — what users will see</p>
+            <p className="text-xs sm:text-sm text-gray-300 break-all">
               Pay <strong>PayBill {mpesaPaybill}</strong> with account{' '}
-              <strong>{mpesaAccountPrefix || 'ESH-'}XXXXXX-XXXX</strong>
+              <strong>{mpesaAccountPrefix || '672912'}XXXXXX-XXXX</strong>
             </p>
           </div>
         )}
       </div>
 
       {/* ── Pending M-Pesa Orders ─────────────────────────────────── */}
-      <div className="bg-white/5 rounded-xl p-6 space-y-4">
+      <div className="bg-white/5 rounded-xl p-4 sm:p-6 space-y-4">
         <div className="flex justify-between items-center">
-          <h2 className="text-2xl font-semibold">Pending M-Pesa Orders</h2>
+          <h2 className="text-xl sm:text-2xl font-semibold">Pending M-Pesa Orders</h2>
           <button
             onClick={loadPending}
             className="text-sm text-purple-400 hover:underline"
@@ -230,8 +230,8 @@ export default function AdminPage() {
             </p>
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
+          <div className="overflow-x-auto -mx-4 sm:mx-0">
+            <table className="w-full text-xs sm:text-sm min-w-[500px]">
               <thead>
                 <tr className="text-gray-400 border-b border-white/10">
                   <th className="text-left py-2 px-2">User</th>
@@ -251,7 +251,7 @@ export default function AdminPage() {
                       {new Date(t.purchaseDate).toLocaleDateString()}
                     </td>
                     <td className="py-2 px-2">
-                      <span className="text-yellow-400 text-xs bg-yellow-400/10 px-2 py-0.5 rounded-full">
+                      <span className="text-yellow-400 text-xs bg-yellow-400/10 px-2 py-0.5 rounded-full whitespace-nowrap">
                         Awaiting Payment
                       </span>
                     </td>

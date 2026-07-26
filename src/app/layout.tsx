@@ -7,7 +7,7 @@ import { AuthProvider } from '@/lib/auth-provider'
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata = {
-  title: 'Esports Hub',
+  title: 'Kylin Esports Hub',
   description: 'Tournaments, community, and tickets for competitive gamers',
 }
 

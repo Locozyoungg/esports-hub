@@ -9,11 +9,11 @@ export default async function TournamentsPage() {
   })
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-12">
-      <h1 className="text-4xl font-bold mb-8">Upcoming Tournaments</h1>
+    <div className="max-w-7xl mx-auto px-4 py-8 sm:py-12">
+      <h1 className="text-3xl sm:text-4xl font-bold mb-6 sm:mb-8">Upcoming Tournaments</h1>
 
       {tournaments.length === 0 ? (
-        <div className="card p-12 text-center">
+        <div className="card p-8 sm:p-12 text-center">
           <p className="text-2xl mb-2">🎮</p>
           <p className="text-gray-400 text-lg mb-2">No tournaments yet</p>
           <p className="text-gray-500 text-sm">
@@ -21,7 +21,7 @@ export default async function TournamentsPage() {
           </p>
         </div>
       ) : (
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {tournaments.map((tournament) => (
             <Card key={tournament.id} className="hover:shadow-lg transition-shadow">
               <img
@@ -30,7 +30,7 @@ export default async function TournamentsPage() {
                 className="w-full h-48 object-cover rounded-t-xl"
               />
               <div className="p-5">
-                <h2 className="text-2xl font-bold mb-2">{tournament.title}</h2>
+                <h2 className="text-xl sm:text-2xl font-bold mb-2">{tournament.title}</h2>
                 <p className="text-gray-400 mb-2">{tournament.game}</p>
                 <p className="text-sm mb-1">
                   📅 {new Date(tournament.startDate).toLocaleDateString()}

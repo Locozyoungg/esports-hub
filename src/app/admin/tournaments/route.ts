@@ -40,10 +40,10 @@ export async function POST(req: Request) {
               connectOrCreate: {
                 where: { slug: 'esports-hub' },
                 create: {
-                  name: 'Esports Hub',
+                  name: 'Kylin Esports Hub',
                   slug: 'esports-hub',
-                  mpesaPaybill: '247247',
-                  mpesaAccountPrefix: 'ESH-',
+                  mpesaPaybill: '542542',
+                  mpesaAccountPrefix: '672912',
                 },
               },
             },

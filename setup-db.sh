@@ -3,7 +3,7 @@
 # Exit immediately if a command exits with a non-zero status
 set -e
 
-echo "🚀 Starting Esports Hub Database Setup..."
+echo "🚀 Starting Kylin Esports Hub Database Setup..."
 
 # 1. Set PostgreSQL password environment variable so psql doesn't prompt for it
 export PGPASSWORD="password"
