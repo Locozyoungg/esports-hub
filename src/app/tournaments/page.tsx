@@ -36,10 +36,10 @@ export default async function TournamentsPage() {
                   📅 {new Date(tournament.startDate).toLocaleDateString()}
                 </p>
                 <p className="text-sm mb-3">
-                  🏆 Prize: ${tournament.prizePool}
+                  🏆 Prize: KES {tournament.prizePool.toLocaleString()}
                 </p>
                 <p className="text-sm mb-4">
-                  🎟️ Ticket: ${tournament.ticketPrice}
+                  🎟️ Ticket: KES {tournament.ticketPrice}
                 </p>
                 <Link href={`/tournaments/${tournament.id}`}>
                   <Button className="w-full">View Details</Button>

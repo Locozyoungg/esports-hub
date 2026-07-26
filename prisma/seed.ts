@@ -69,7 +69,7 @@ async function main() {
       description: 'First weekly tournament. Top 3 win cash prizes!',
       startDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
       endDate: new Date(Date.now() + 9 * 24 * 60 * 60 * 1000),
-      ticketPrice: 10,
+      ticketPrice: 20,        // KES
       totalTickets: 100,
       soldTickets: 0,
       imageUrl: '/valorant-tourney.jpg',
@@ -90,8 +90,8 @@ async function main() {
       description: 'First weekly tournament. Top 3 win cash prizes!',
       startDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
       endDate: new Date(Date.now() + 9 * 24 * 60 * 60 * 1000),
-      prizePool: 500,
-      ticketPrice: 10,
+      prizePool: 5000,        // KES
+      ticketPrice: 20,        // KES
       imageUrl: '/valorant-tourney.jpg',
       status: 'UPCOMING',
       eventId: event.id,

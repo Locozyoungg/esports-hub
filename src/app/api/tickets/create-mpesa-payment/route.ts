@@ -61,19 +61,26 @@ export async function POST(req: Request) {
     const shortUserId = userId.slice(-4).toUpperCase()
     const accountRef = `${prefix}${shortEventId}-${shortUserId}`
 
-    // Create pending ticket (no stripePaymentIntentId means pending M-Pesa)
-    const pendingTicket = await prisma.ticket.create({
+    // Auto-confirm M-Pesa ticket — no manual admin verification needed
+    const ticket = await prisma.ticket.create({
       data: {
         userId,
         eventId: event.id,
         organizationId: org.id,
-        // stripePaymentIntentId intentionally null — admin confirms manually
+        stripePaymentIntentId: `mpesa-${Date.now()}-${userId.slice(-6)}`,
       },
+    })
+
+    // Increment sold count
+    await prisma.event.update({
+      where: { id: event.id },
+      data: { soldTickets: { increment: 1 } },
     })
 
     return NextResponse.json({
       success: true,
-      ticketId: pendingTicket.id,
+      ticketId: ticket.id,
+      confirmed: true,
       mpesa: {
         paybill: org.mpesaPaybill,
         accountRef,

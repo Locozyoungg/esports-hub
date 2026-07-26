@@ -10,7 +10,7 @@
 
 @layer components {
   .gradient-text {
-    @apply bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-pink-600;
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-violet-400 via-purple-400 to-fuchsia-500;
   }
 
   .card {
@@ -21,5 +21,16 @@
     @apply w-full bg-black/50 border border-white/20 rounded px-4 py-2 text-white
            placeholder-gray-500 focus:outline-none focus:border-purple-500
            focus:ring-1 focus:ring-purple-500 transition-colors;
+  }
+
+  /* Brand button gradient */
+  .btn-brand {
+    @apply bg-gradient-to-r from-violet-600 to-fuchsia-600 hover:from-violet-500 hover:to-fuchsia-500
+           text-white font-medium rounded-lg transition-all duration-200;
+  }
+
+  /* Section gradient */
+  .section-dark {
+    @apply bg-gradient-to-b from-gray-950 via-black to-gray-950;
   }
 }

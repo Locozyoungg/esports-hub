@@ -21,7 +21,7 @@ export async function GET(req: Request) {
         eventId,
       },
     })
-    return NextResponse.json({ hasTicket: !!ticket })
+    return NextResponse.json({ hasTicket: !!ticket, ticketId: ticket?.id || null })
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Unknown error'
     return NextResponse.json({ error: message }, { status: 500 })

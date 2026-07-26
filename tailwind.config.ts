@@ -10,8 +10,13 @@ const config: Config = {
     extend: {
       colors: {
         brand: {
-          purple: "#8b5cf6",
+          purple: "#7c3aed",
+          "purple-light": "#a78bfa",
+          "purple-dark": "#5b21b6",
           pink: "#ec4899",
+          gold: "#f59e0b",
+          cyan: "#06b6d4",
+          navy: "#0f0a2e",
         },
       },
     },

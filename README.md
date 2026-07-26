@@ -1,8 +1,8 @@
-# Esports Hub 🎮
+# Kylin Esports Hub 🎮
 
-**Tournaments, community, and digital ticketing for competitive gamers.**
+**Tournaments, community, merchandise, and digital ticketing for competitive gamers.**
 
-Esports Hub is a full-stack event platform where organizations can publish ticketed experiences, players can browse tournaments, buy tickets via Stripe or M-Pesa, and discuss matches in real-time chat.
+Kylin Esports Hub is a full-stack esports platform where players can browse tournaments, buy tickets via Stripe or M-Pesa, shop for gaming gear and branded merchandise, and discuss matches in real-time chat.
 
 ---
 
@@ -10,15 +10,14 @@ Esports Hub is a full-stack event platform where organizations can publish ticke
 
 | Layer | Technology |
 |-------|-----------|
-| Framework | [Next.js 14](https://nextjs.org/) (App Router) |
+| Framework | [Next.js 16](https://nextjs.org/) (App Router + Turbopack) |
 | Language | TypeScript |
 | Styling | [Tailwind CSS](https://tailwindcss.com/) |
 | Database | PostgreSQL via [Prisma](https://www.prisma.io/) ORM |
-| Auth | [NextAuth.js](https://next-auth.js.org/) v4 (Credentials) |
+| Auth | [NextAuth.js](https://next-auth.js.org/) v4 (Credentials + JWT) |
 | Card Payments | [Stripe](https://stripe.com/) Payment Intents + Webhooks |
-| Mobile Payments | [M-Pesa](https://www.safaricom.co.ke/personal/m-pesa) PayBill (manual confirmation flow) |
-| Real-time | [Socket.IO](https://socket.io/) (live chat) |
-| 3D Visualization | [Three.js](https://threejs.org/) via [React Three Fiber](https://docs.pmnd.rs/react-three-fiber) |
+| Mobile Payments | [M-Pesa](https://www.safaricom.co.ke/personal/m-pesa) PayBill — auto-confirmed |
+| Real-time | [Socket.IO](https://socket.io/) (live tournament chat) |
 | Animation | [Framer Motion](https://www.framer.com/motion/) |
 | UI Primitives | [class-variance-authority](https://cva-docs.vercel.app/) + [clsx](https://github.com/lukeed/clsx) + [tailwind-merge](https://github.com/dcastil/tailwind-merge) |
 
@@ -32,43 +31,74 @@ Organization   ─── owns ───→   Event      ─── sold via ─�
                               linked to
                                    ↓
 Tournament   ─── has ───→   TournamentRegistration
+
+Product      ─── ordered via ───→   OrderItem   ─── belongs to ───→   Order
+
+PageView / SaleMetric   ─── analytics
 ```
 
 ### Domain model
 
-- **Organization** — White-label event hosts. Has a unique `slug` for branded paths, customizable `primaryColor`, and configurable `mpesaPaybill` / `mpesaAccountPrefix` for mobile money payments.
-- **Event** — A ticketed experience (tournament, concert, meetup) owned by an Organization. Tracks capacity (`totalTickets` / `soldTickets`), price, and status (`DRAFT`, `PUBLISHED`, `SOLD_OUT`, `CANCELLED`).
-- **Tournament** — A competitive event with game, prize pool, bracket structure. Optionally linked to an Event for ticket sales.
-- **Ticket** — A purchased entry to an Event, tied to a User and Organization. Created upon successful Stripe payment intent or pending M-Pesa payment.
-- **User** — Standard or admin role. Can belong to multiple Organizations. Guest checkout creates users with a random hashed password.
+- **Organization** — White-label event host. Has a unique `slug`, customizable `primaryColor`, and M-Pesa `mpesaPaybill` / `mpesaAccountPrefix`.
+- **Event** — A ticketed experience owned by an Organization. Tracks capacity, price (KES), and status.
+- **Tournament** — A competitive event with game, prize pool, bracket, optionally linked to an Event for ticket sales.
+- **Ticket** — A purchased entry to an Event. Auto-confirmed for M-Pesa; created on Stripe webhook for card payments.
+- **Product** — Merchandise item with name, description, price (KES), category, stock, and image.
+- **Order / OrderItem** — Purchased merchandise with shipping details and payment status.
+- **PageView / SaleMetric** — Analytics tracking for visits and revenue.
+- **User** — Standard or admin role. Can belong to multiple Organizations.
 
 ---
 
 ## Features
 
-### Completed
+### 🎮 Tournaments & Events
+- Browse upcoming tournaments with game, prize pool, and ticket price
+- Tournament detail with match bracket, live chat, and ticket purchase
+- Admin panel to create tournaments (auto-linked to Event + Organization)
 
-- **User auth** — Sign-in with email/password via NextAuth.js (Credentials provider). JWT session with `id` and `role`.
-- **Role-based admin** — Admin panel at `/admin` for creating tournaments (auto-linked to an Event and a default Organization) and managing M-Pesa settings.
-- **Card payments (Stripe)** — Stripe PaymentIntent creation with sold-out, cancelled-event, and capacity checks. Webhook handler creates tickets idempotently.
-- **Mobile payments (M-Pesa)** — Users can pay via M-Pesa PayBill on tournament pages. Pending orders appear in the admin panel for manual confirmation.
-- **Guest checkout** — Public API (`/api/public/tickets`) enables card purchasing without an existing account.
-- **Webhook handling** — Stripe webhook at `/api/webhooks/stripe` creates tickets and increments `soldTickets`. Idempotent via `stripePaymentIntentId` dedup.
-- **Ticket verification** — `/api/tickets/check?eventId=` returns whether the current user holds a ticket.
-- **Profile page** — `/profile/[id]` shows user info and ticket list.
-- **Community** — Posts and comments at `/community` with create and detail views.
-- **Live chat** — Socket.IO-based real-time chat on tournament detail pages (room-per-tournament).
-- **3D bracket** — Three.js visualization of match brackets on tournament pages.
-- **Responsive UI** — Dark theme with gradient accents, loading skeletons, error states, and empty states throughout.
-- **Seed data** — `npx prisma db seed` creates admin + sample user, organization with default M-Pesa PayBill, event, tournament, and a welcome post.
+### 💰 Payments
+- **Card (Stripe)** — PaymentIntent flow with webhook confirmation, capacity checks, sold-out guard
+- **M-Pesa PayBill** — Auto-confirmed instant tickets. PayBill 542542, account reference generated per transaction
+- **Currency** — All prices in KES (Kenyan Shillings)
 
-### Planned / In progress
+### 🛒 Merchandise Shop
+- Product catalog at `/shop` with category filters (Gaming Gear, Apparel, Accessories, Other)
+- Add-to-cart with quantity controls via `CartProvider` context
+- Checkout at `/shop/checkout` with shipping form and order placement
+- 16 seeded products: hoodies, T-shirts, jerseys, mouse, keyboard, headset, chair, stickers, gift cards
 
-- Stripe Elements integration for card collection on the checkout page (currently simulates payment).
-- Match/round bracket data model and real bracket rendering.
-- Organization management dashboard.
-- Email confirmations after ticket purchase.
-- Tournament registration flow (players sign up for brackets).
+### 🎫 Tickets
+- Auto-confirmed M-Pesa tickets — no admin verification needed
+- Downloadable/printable ticket page at `/tickets/[id]` with QR placeholder
+- Profile page shows ticket history with status badges
+
+### 👥 Community
+- Post listing and detail pages at `/community`
+- Create posts and comments
+- Real-time Socket.IO chat on tournament detail pages
+
+### 📊 Admin Dashboard
+- **Dashboard tab** — KPI cards (page views, tickets, users, sales revenue), sales breakdown (tickets vs merchandise), recent activity feed
+- **Tournaments tab** — Create new tournaments with KES pricing
+- **Tickets tab** — Full ticket list with user, event, price, payment method, and date
+- **M-Pesa tab** — PayBill settings + pending payments table
+
+### 📈 Analytics
+- Automatic pageview tracking on every route via `AnalyticsTracker`
+- Sale metrics recorded for tickets and merchandise orders
+- Admin dashboard aggregates: 30-day views, revenue by type, recent sales feed
+
+### 📱 Mobile-Friendly
+- Hamburger menu with slide-down navigation
+- 44px+ touch targets on all interactive elements
+- Responsive headings, full-width buttons on mobile, scrollable data tables
+- Adaptive grids and stacked layouts throughout
+
+### 🎨 Branded Design
+- Logo in header with gradient text styling
+- Dark theme with violet/purple/fuchsia brand accents
+- Consistent color system via Tailwind brand tokens
 
 ---
 
@@ -77,14 +107,13 @@ Tournament   ─── has ───→   TournamentRegistration
 ### Prerequisites
 
 - Node.js 18+
-- PostgreSQL 14+
-- Stripe account (test mode)
+- Docker (for PostgreSQL) or local PostgreSQL 14+
 
 ### 1. Clone and install
 
 ```bash
-git clone <repo-url> esports-hub
-cd esports-hub
+git clone <repo-url> kylin-esports-hub
+cd kylin-esports-hub
 npm install
 ```
 
@@ -93,9 +122,11 @@ npm install
 Create `.env.local` in the project root:
 
 ```env
-DATABASE_URL="postgresql://postgres:password@localhost:5432/esports_hub"
-NEXTAUTH_SECRET="generate-a-random-secret-here"
-NEXTAUTH_URL="http://localhost:3000"
+DATABASE_URL="postgresql://postgres:password@127.0.0.1:5432/esports_hub?schema=public"
+NEXTAUTH_SECRET="your-random-base64-secret"
+
+# Optional — set for Cloudflare Tunnel / custom domain
+# NEXTAUTH_URL="https://your-domain.com"
 
 STRIPE_SECRET_KEY="sk_test_..."
 STRIPE_WEBHOOK_SECRET="whsec_..."
@@ -108,30 +139,32 @@ Generate a `NEXTAUTH_SECRET`:
 openssl rand -base64 32
 ```
 
-M-Pesa uses the Organization table's `mpesaPaybill` field (configured via the admin panel). No additional environment variables needed.
+> **Note:** `NEXTAUTH_URL` is optional. When unset, NextAuth auto-detects from request headers — works with both `localhost` and Cloudflare Tunnel.
 
 ### 3. Database
 
 ```bash
+# Start PostgreSQL via Docker
+docker run -d --name esports-hub-postgres \
+  -e POSTGRES_USER=postgres \
+  -e POSTGRES_PASSWORD=password \
+  -e POSTGRES_DB=esports_hub \
+  -p 5432:5432 postgres:16-alpine
+
 # Generate Prisma client
 npx prisma generate
 
-# Push schema to PostgreSQL (creates tables)
+# Push schema to PostgreSQL
 npx prisma db push
 
-# Seed with sample data
+# Seed sample data (users, org, event, tournament, post)
 npx prisma db seed
+
+# Seed merchandise products
+npx ts-node prisma/seed-products.ts
 ```
 
-### 4. Stripe webhook (local dev)
-
-```bash
-stripe listen --forward-to localhost:3000/api/webhooks/stripe
-```
-
-Copy the webhook signing secret into `STRIPE_WEBHOOK_SECRET`.
-
-### 5. Start
+### 4. Start
 
 ```bash
 npm run dev
@@ -155,65 +188,77 @@ Open [http://localhost:3000](http://localhost:3000).
 ```
 src/
 ├── app/
-│   ├── admin/                   # Admin panel
-│   │   ├── page.tsx             # Tournament form + M-Pesa settings + pending orders
-│   │   └── tournaments/
-│   │       └── route.ts         # POST /admin/tournaments
+│   ├── admin/
+│   │   ├── page.tsx                    # Dashboard + tournaments + tickets + M-Pesa tabs
+│   │   └── tournaments/route.ts        # POST create tournament
 │   ├── api/
-│   │   ├── auth/[...nextauth]/
-│   │   │   └── route.ts         # NextAuth handler
+│   │   ├── admin/
+│   │   │   ├── metrics/route.ts        # GET admin KPIs
+│   │   │   └── all-tickets/route.ts    # GET all tickets (admin)
+│   │   ├── analytics/
+│   │   │   ├── pageview/route.ts       # POST track page visit
+│   │   │   └── sale/route.ts           # POST record sale metric
+│   │   ├── auth/[...nextauth]/route.ts # NextAuth handler
+│   │   ├── orders/route.ts             # GET/POST orders
 │   │   ├── organizations/
-│   │   │   └── [slug]/route.ts  # GET/PUT org (M-Pesa settings)
-│   │   ├── posts/route.ts       # Community posts CRUD
+│   │   │   └── [slug]/route.ts         # GET/PUT org settings
+│   │   ├── posts/route.ts              # Community posts CRUD
+│   │   ├── products/route.ts           # GET/POST products
 │   │   ├── tickets/
-│   │   │   ├── route.ts         # GET user tickets
-│   │   │   ├── check/route.ts   # GET ticket ownership check
-│   │   │   ├── pending/route.ts # GET pending M-Pesa orders (admin)
-│   │   │   ├── create-mpesa-payment/route.ts  # POST M-Pesa order
+│   │   │   ├── [id]/route.ts           # GET single ticket detail
+│   │   │   ├── route.ts                # GET user tickets
+│   │   │   ├── check/route.ts          # GET ticket ownership check
+│   │   │   ├── pending/route.ts        # GET pending M-Pesa (admin)
+│   │   │   ├── create-mpesa-payment/route.ts  # POST auto-confirmed M-Pesa ticket
 │   │   │   └── create-payment-intent/route.ts # POST Stripe payment
-│   │   ├── tournaments/[id]/
-│   │   │   └── route.ts         # GET tournament detail (includes org M-Pesa)
-│   │   ├── public/tickets/
-│   │   │   └── route.ts         # POST guest checkout
-│   │   ├── socket/io.ts         # Socket.IO server
-│   │   └── webhooks/stripe/
-│   │       └── route.ts         # Stripe event handler
+│   │   ├── tournaments/[id]/route.ts   # GET tournament detail
+│   │   ├── public/tickets/route.ts     # POST guest checkout
+│   │   ├── socket/io.ts                # Socket.IO server
+│   │   └── webhooks/stripe/route.ts    # Stripe event handler
 │   ├── auth/signin/page.tsx
-│   ├── checkout/page.tsx        # Payment confirmation screen
+│   ├── checkout/page.tsx               # Card payment confirmation
 │   ├── community/
-│   │   ├── page.tsx             # Post listing
-│   │   └── post/[id]/page.tsx   # Post detail + comments
-│   ├── organizations/
-│   │   └── [slug]/events/
-│   │       └── route.ts         # POST event under org
-│   ├── profile/[id]/page.tsx    # User profile + ticket list
+│   │   ├── page.tsx                    # Post listing
+│   │   └── post/[id]/page.tsx          # Post detail + comments
+│   ├── profile/[id]/page.tsx           # User profile + ticket list
+│   ├── shop/
+│   │   ├── page.tsx                    # Product catalog with category filters
+│   │   └── checkout/page.tsx           # Cart review + shipping + place order
+│   ├── tickets/[id]/page.tsx           # Printable/downloadable ticket
 │   ├── tournaments/
-│   │   ├── page.tsx             # Tournament listing
-│   │   └── [id]/page.tsx        # Tournament detail + chat + bracket + M-Pesa overlay
-│   ├── layout.tsx
-│   ├── page.tsx                 # Landing page
-│   └── globals.css              # Tailwind directives
+│   │   ├── page.tsx                    # Tournament listing
+│   │   └── [id]/page.tsx               # Detail + bracket + chat + M-Pesa overlay
+│   ├── layout.tsx                      # Root layout (auth + cart + analytics providers)
+│   ├── page.tsx                        # Landing page
+│   └── globals.css                     # Tailwind + brand utilities
 ├── components/
 │   ├── community/
 │   │   ├── CreatePost.tsx
 │   │   └── PostCard.tsx
 │   ├── layout/
-│   │   ├── Header.tsx           # Nav, auth-aware
-│   │   └── Footer.tsx
+│   │   ├── Header.tsx                  # Logo + nav + hamburger menu
+│   │   ├── Footer.tsx
+│   │   └── AnalyticsTracker.tsx        # Per-route pageview tracking
 │   ├── tournament/
-│   │   ├── Bracket3D.tsx        # Three.js bracket visualization
-│   │   └── LiveChat.tsx         # Socket.IO chat component
+│   │   ├── Bracket3D.tsx               # Match bracket display
+│   │   └── LiveChat.tsx                # Socket.IO chat component
 │   └── ui/
-│       ├── Button.tsx           # Variant-based button (cva)
-│       └── Card.tsx             # Styled card wrapper
+│       ├── Button.tsx                  # Variant-based button (cva)
+│       └── Card.tsx                    # Styled card wrapper
 ├── lib/
-│   ├── auth.ts                  # NextAuth server config (authOptions)
-│   ├── auth-provider.tsx        # Client-side SessionProvider
-│   ├── prisma.ts                # Singleton Prisma client
-│   └── utils.ts                 # cn() helper
+│   ├── auth.ts                         # NextAuth server config
+│   ├── auth-provider.tsx               # Client SessionProvider wrapper
+│   ├── cart-context.tsx                # Cart state (add/remove/quantity/total)
+│   ├── prisma.ts                       # Singleton Prisma client
+│   └── utils.ts                        # cn() helper
 └── types/
-    ├── index.ts                 # Domain interfaces (including Organization, MpesaPayment)
-    └── next-auth.d.ts           # Session type augmentation
+    ├── index.ts                        # Domain interfaces
+    └── next-auth.d.ts                  # Session type augmentation
+
+prisma/
+├── schema.prisma                       # Full schema (9 models + enums)
+├── seed.ts                             # Users + org + event + tournament + post
+└── seed-products.ts                    # 16 merchandise products
 ```
 
 ---
@@ -224,36 +269,50 @@ src/
 
 | Method | Path | Auth | Description |
 |--------|------|------|-------------|
-| POST | `/api/auth/callback/credentials` | No | Sign in (NextAuth built-in) |
+| POST | `/api/auth/callback/credentials` | No | Sign in |
 | GET  | `/api/auth/session` | No | Get current session |
 
 ### Tickets
 
 | Method | Path | Auth | Description |
 |--------|------|------|-------------|
-| GET | `/api/tickets?userId=` | Yes | List user tickets (self or admin) |
-| GET | `/api/tickets/check?eventId=` | Optional | Check ticket ownership |
+| GET | `/api/tickets?userId=` | Yes | List user tickets |
+| GET | `/api/tickets/[id]` | Yes | Single ticket detail (owner or admin) |
+| GET | `/api/tickets/check?eventId=` | Optional | Check ticket ownership (returns ticketId) |
 | POST | `/api/tickets/create-payment-intent` | Yes | Create Stripe PaymentIntent |
-| POST | `/api/tickets/create-mpesa-payment` | Yes | Create pending M-Pesa order (returns paybill + account ref) |
-| GET | `/api/tickets/pending` | Admin | List all tickets awaiting M-Pesa confirmation |
-| POST | `/api/public/tickets` | No | Guest checkout (creates user if needed) |
+| POST | `/api/tickets/create-mpesa-payment` | Yes | Create auto-confirmed M-Pesa ticket |
+| POST | `/api/public/tickets` | No | Guest checkout |
 
 ### Tournaments & Events
 
 | Method | Path | Auth | Description |
 |--------|------|------|-------------|
-| GET | `/api/tournaments` | No | List all tournaments |
-| GET | `/api/tournaments/[id]` | No | Tournament detail (includes linked event + org M-Pesa settings) |
+| GET | `/api/tournaments/[id]` | No | Tournament detail (includes org M-Pesa settings) |
 | POST | `/admin/tournaments` | Admin | Create tournament + linked event + org |
-| POST | `/api/organizations/[slug]/events` | Org member | Create event under organization |
+
+### Shop & Orders
+
+| Method | Path | Auth | Description |
+|--------|------|------|-------------|
+| GET | `/api/products?category=` | No | List products (optional category filter) |
+| POST | `/api/products` | Admin | Create product |
+| GET | `/api/orders` | Yes | List user orders |
+| POST | `/api/orders` | Yes | Place order from cart |
 
 ### Organizations
 
 | Method | Path | Auth | Description |
 |--------|------|------|-------------|
-| POST | `/api/organizations` | Yes | Create organization |
-| GET | `/api/organizations/[slug]` | No | Fetch org details (M-Pesa settings, events) |
-| PUT | `/api/organizations/[slug]` | Admin | Update org settings (name, M-Pesa paybill, account prefix) |
+| GET | `/api/organizations/[slug]` | No | Fetch org details |
+| PUT | `/api/organizations/[slug]` | Admin | Update org settings (name, M-Pesa) |
+
+### Admin
+
+| Method | Path | Auth | Description |
+|--------|------|------|-------------|
+| GET | `/api/admin/metrics` | Admin | Dashboard KPIs (views, tickets, sales, users) |
+| GET | `/api/admin/all-tickets` | Admin | All tickets with user/event/payment info |
+| GET | `/api/tickets/pending` | Admin | Pending M-Pesa tickets |
 
 ### Community
 
@@ -262,37 +321,38 @@ src/
 | GET | `/api/posts` | No | List posts with authors and comments |
 | POST | `/api/posts` | Yes | Create post |
 
-### Webhooks
+### Analytics
 
 | Method | Path | Description |
 |--------|------|-------------|
-| POST | `/api/webhooks/stripe` | Stripe event handling (idempotent ticket creation) |
+| POST | `/api/analytics/pageview` | Record page visit (path + referrer) |
+| POST | `/api/analytics/sale` | Record sale metric (type, amount, description) |
 
-### Real-time
+### Webhooks & Real-time
 
 | Endpoint | Protocol | Description |
 |----------|----------|-------------|
+| `/api/webhooks/stripe` | HTTP POST | Stripe event handling (idempotent ticket creation) |
 | `/api/socket` | Socket.IO (WebSocket) | Live chat per tournament room |
 
 ---
 
 ## M-Pesa Payment Flow
 
-M-Pesa payments use a **manual confirmation** flow:
+M-Pesa payments use an **auto-confirmed** flow:
 
-1. **Admin configures** the PayBill number and account prefix in the admin panel (`/admin`) under "M-Pesa PayBill Settings".
+1. **Admin configures** the PayBill number and account prefix in `/admin` → M-Pesa tab.
 2. **On the tournament detail page**, users see a "Pay M-Pesa" button when the organization has a PayBill configured.
-3. **User clicks "Pay M-Pesa"** → the system creates a pending ticket record and displays an overlay with:
-   - PayBill number
-   - Account reference (generated from the prefix + event/user IDs)
-   - Amount in KES (display rate: 150 KES/USD for reference)
+3. **User clicks "Pay M-Pesa"** → system creates a ticket and displays an overlay with:
+   - PayBill number: **542542**
+   - Account reference (e.g., `672912EVENT1-XY12` — prefix + event/user ID suffix)
+   - Amount in KES
    - Step-by-step M-Pesa instructions
 4. **User sends payment** via M-Pesa on their phone using the displayed details.
-5. **User clicks "I've Sent"** — the overlay dismisses and marks the ticket as owned locally (pending status remains in the database).
-6. **Admin verifies** the payment cleared and confirms the order via the "Pending M-Pesa Orders" table at `/admin`.
-7. **Pending tickets** are those with `stripePaymentIntentId: null` — they appear automatically in the admin pending list.
+5. **User clicks "I've Sent"** → overlay closes, ticket is **auto-confirmed**, and a "View / Download Ticket" link appears.
+6. The ticket is immediately available under the user's profile and at `/tickets/[id]`.
 
-> Note: The M-Pesa feature handles the **PayBill (business number)** flow. For Till Number or Buy Goods flows, customize the overlay instructions in `src/app/tournaments/[id]/page.tsx`.
+> The account reference format is `{prefix}{last-6-of-eventId}-{last-4-of-userId}`. This ensures each transaction has a unique reference the admin can use to reconcile payments.
 
 ---
 
@@ -302,38 +362,44 @@ M-Pesa payments use a **manual confirmation** flow:
 |----------|----------|-------------|
 | `DATABASE_URL` | Yes | PostgreSQL connection string |
 | `NEXTAUTH_SECRET` | Yes | JWT signing secret |
-| `NEXTAUTH_URL` | Yes | Application base URL |
+| `NEXTAUTH_URL` | No | Base URL — unset for auto-detect (works with Cloudflare Tunnel) |
 | `STRIPE_SECRET_KEY` | Yes | Stripe secret key (sk_test_...) |
 | `STRIPE_WEBHOOK_SECRET` | For webhooks | Stripe webhook signing secret |
 | `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` | For checkout | Stripe publishable key (pk_test_...) |
 
-M-Pesa uses database-stored configuration (Organization table) and does not require additional environment variables.
+M-Pesa configuration is stored in the database (Organization table) — no environment variables needed.
 
 ---
 
 ## Scripts
 
 ```bash
-npm run dev       # Start dev server with Turbopack
-npm run build     # Production build
-npm run start     # Start production server
-npm run lint      # Run linter
+npm run dev              # Start dev server with Turbopack
+npm run build            # Production build
+npm run start            # Start production server
+npx prisma db push       # Sync schema to database
+npx prisma db seed       # Seed users + org + event + tournament + post
+npx ts-node prisma/seed-products.ts  # Seed 16 merchandise products
 ```
 
 Postinstall automatically runs `prisma generate`.
 
 ---
 
-## Deployment
+## Cloudflare Tunnel
 
-The app is a standard Next.js application. Deploy to any Node.js host:
+For remote access, the app is configured to work behind Cloudflare Tunnel:
 
+- **`NEXTAUTH_URL`** is unset → NextAuth auto-detects from request headers
+- **`allowedDevOrigins`** in `next.config.mjs` allows the tunnel domain for HMR
+- The `AnalyticsTracker` works regardless of access origin
+
+To set up:
 ```bash
-npm run build
-npm run start
+cloudflared tunnel --url http://localhost:3000
 ```
 
-Required environment variables must be set on the hosting platform. The Stripe webhook endpoint URL must be registered in your Stripe dashboard.
+Then set `NEXTAUTH_URL` in `.env.local` to your tunnel URL if needed.
 
 ---
 

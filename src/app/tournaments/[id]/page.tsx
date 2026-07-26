@@ -8,8 +8,6 @@ import Bracket3D from '@/components/tournament/Bracket3D'
 import { Button } from '@/components/ui/Button'
 import Link from 'next/link'
 
-
-
 interface TournamentData {
   id: string
   title: string
@@ -28,6 +26,7 @@ export default function TournamentDetail() {
   const { data: session } = useSession()
   const [tournament, setTournament] = useState<TournamentData | null>(null)
   const [hasTicket, setHasTicket] = useState(false)
+  const [myTicketId, setMyTicketId] = useState<string | null>(null)
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(true)
   const [buying, setBuying] = useState(false)
@@ -59,7 +58,10 @@ export default function TournamentDetail() {
           const ticketRes = await fetch(`/api/tickets/check?eventId=${data.event.id}`)
           if (ticketRes.ok) {
             const ticketData = await ticketRes.json()
-            if (!cancelled) setHasTicket(ticketData.hasTicket)
+            if (!cancelled) {
+              setHasTicket(ticketData.hasTicket)
+              setMyTicketId(ticketData.ticketId || null)
+            }
           }
         }
       } catch (err) {
@@ -107,7 +109,7 @@ export default function TournamentDetail() {
       })
       const data = await res.json()
       if (!res.ok) throw new Error(data.error || 'M-Pesa payment failed')
-      setMpesaData(data.mpesa)
+      setMpesaData({ ...data.mpesa, ticketId: data.ticketId })
       setShowMpesaOptions(true)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to create M-Pesa order')
@@ -119,6 +121,13 @@ export default function TournamentDetail() {
   const handleDismissMpesa = () => {
     setShowMpesaOptions(false)
     setMpesaData(null)
+  }
+
+  const handleMpesaSent = () => {
+    const ticketId = mpesaData?.ticketId
+    handleDismissMpesa()
+    setHasTicket(true)
+    setMyTicketId(ticketId || null)
   }
 
   if (loading) {
@@ -167,7 +176,7 @@ export default function TournamentDetail() {
         {tournament.event && !hasTicket ? (
           <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 w-full sm:w-auto">
             <Button onClick={handleBuyTicket} disabled={buying} className="w-full sm:w-auto">
-              {buying ? 'Processing...' : `Pay Card $${tournament.ticketPrice}`}
+              {buying ? 'Processing...' : `Pay Card KES ${tournament.ticketPrice}`}
             </Button>
             {(tournament.event as any)?.organization?.mpesaPaybill ? (
               <Button
@@ -181,7 +190,17 @@ export default function TournamentDetail() {
             ) : null}
           </div>
         ) : hasTicket ? (
-          <span className="bg-green-600 px-4 py-2 rounded-full text-sm sm:text-base">✅ Ticket Owned</span>
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2">
+            <span className="bg-green-600 px-4 py-2 rounded-full text-sm sm:text-base">✅ Ticket Confirmed</span>
+            {myTicketId && (
+              <Link
+                href={`/tickets/${myTicketId}`}
+                className="text-purple-400 hover:underline text-sm"
+              >
+                View / Download Ticket &rarr;
+              </Link>
+            )}
+          </div>
         ) : null}
       </div>
 
@@ -198,7 +217,7 @@ export default function TournamentDetail() {
             <div className="mt-4 grid grid-cols-2 gap-4 text-sm">
               <div>
                 <span className="text-gray-400">Prize Pool</span>
-                <p className="text-base sm:text-lg font-semibold">${tournament.prizePool}</p>
+                <p className="text-base sm:text-lg font-semibold">KES {tournament.prizePool.toLocaleString()}</p>
               </div>
               <div>
                 <span className="text-gray-400">Starts</span>
@@ -212,7 +231,7 @@ export default function TournamentDetail() {
               </div>
               <div>
                 <span className="text-gray-400">Ticket Price</span>
-                <p className="text-base sm:text-lg font-semibold">${tournament.ticketPrice}</p>
+                <p className="text-base sm:text-lg font-semibold">KES {tournament.ticketPrice}</p>
               </div>
             </div>
           </div>
@@ -245,7 +264,7 @@ export default function TournamentDetail() {
               <div className="flex justify-between items-center gap-2">
                 <span className="text-gray-400 shrink-0">Amount</span>
                 <span className="font-semibold text-lg sm:text-xl text-green-400">
-                  KES {(mpesaData.amount * 150).toLocaleString()}
+                  KES {mpesaData.amount.toLocaleString()}
                 </span>
               </div>
               <hr className="border-white/10" />
@@ -271,11 +290,11 @@ export default function TournamentDetail() {
                 <li>Select <strong>PayBill</strong></li>
                 <li>Enter PayBill: <strong>{mpesaData.paybill}</strong></li>
                 <li>Enter Account: <strong>{mpesaData.accountRef}</strong></li>
-                <li>Enter Amount: <strong>KES {(mpesaData.amount * 150).toLocaleString()}</strong></li>
+                <li>Enter Amount: <strong>KES {mpesaData.amount.toLocaleString()}</strong></li>
                 <li>Confirm and send</li>
               </ol>
-              <p className="mt-2 text-xs text-yellow-400">
-                Your ticket will be confirmed once payment is verified by an admin.
+              <p className="mt-2 text-xs text-green-400">
+                ✅ Your ticket will be confirmed automatically once you tap &ldquo;I&apos;ve Sent&rdquo; below.
               </p>
             </div>
 
@@ -287,10 +306,7 @@ export default function TournamentDetail() {
                 Close
               </button>
               <button
-                onClick={() => {
-                  handleDismissMpesa()
-                  setHasTicket(true)
-                }}
+                onClick={handleMpesaSent}
                 className="flex-1 bg-purple-600 rounded-lg py-3 hover:bg-purple-700 transition-colors text-sm sm:text-base"
               >
                 I&apos;ve Sent
